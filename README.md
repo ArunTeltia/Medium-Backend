@@ -1,4 +1,4 @@
-Medium Backend Node, MongoDB API
+Medium Backend Node,Express, MongoDB API
 
 - [x] Database Connection
 - [x] Server connection
