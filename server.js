@@ -1,9 +1,10 @@
 const mongoose = require("mongoose");
+require("dotenv").config();
 
 const { User, Story, Clap } = require("./models");
 
 const run = async () => {
-  mongoose.connect("mongodb://127.0.0.1:27017/medium_clone", (error) => {
+  mongoose.connect(process.env.MONGO_URI, (error) => {
     throw new Error(error);
   });
 
@@ -19,10 +20,13 @@ const run = async () => {
   });
 
   console.log(user);
-
+  await user.save();
   console.log(await Story.findById(story.id).populate("author"));
+  await story.save();
 };
 
 run()
-  .then(() => mongoose.disconnect().then(console.log).catch(console.error))
+  .then(() =>
+    mongoose.disconnect().then(console.log("hello")).catch(console.error)
+  )
   .catch(console.error);
