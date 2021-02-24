@@ -7,7 +7,7 @@
     "test": "jest --runInBand"
   },
   "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "dependencies": {
     "dotenv": "^8.2.0",
     "faker": "^5.4.0",
