@@ -1,32 +1,21 @@
+const express = require("express");
+const bodyParser = require("body-parser");
 const mongoose = require("mongoose");
-require("dotenv").config();
 
-const { User, Story, Clap } = require("./models");
+const models = require("./models");
+const app = express();
 
-const run = async () => {
-  mongoose.connect(process.env.MONGO_URI, (error) => {
-    throw new Error(error);
-  });
+app.use(
+  bodyParser.json(),
+  bodyParser.urlencoded({ extended: false }),
+  (req, res, next) => {
+    req.models = models;
+    next();
+  }
+);
 
-  const user = await User.create({
-    username: "Arun",
-    avatar_url: "test@test.com",
-  });
-  const story = await Story.create({
-    title: "title",
-    body: "body",
-    author: user._id,
-    parent: null,
-  });
+mongoose.connect(`${process.env.MONGO_URI}`, (err) => console.error(err));
 
-  console.log(user);
-  await user.save();
-  console.log(await Story.findById(story.id).populate("author"));
-  await story.save();
-};
+const PORT = process.env.PORT || 5000;
 
-run()
-  .then(() =>
-    mongoose.disconnect().then(console.log("hello")).catch(console.error)
-  )
-  .catch(console.error);
+app.listen(PORT, (err) => console.log(err || `listening on localhost:${PORT}`));

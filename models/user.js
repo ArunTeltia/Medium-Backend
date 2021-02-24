@@ -17,18 +17,41 @@ userSchema.virtual("claps", {
   foreignField: "user",
 });
 
-//method will help to calculate and give back a response 
+userSchema.virtual("followersList", {
+  ref: "follows",
+  localField: "_id",
+  foreignField: "followedUser",
+});
+
+userSchema.virtual("followingList", {
+  ref: "follows",
+  localField: "_id",
+  foreignField: "follower",
+});
+
+//whenever there is a wipe of user from the database, before wiping we have to remove his
+//stories and claps
+// ?? how to delete all the user that he is following fro thier follow list
+// we can create the reference of the followers in the list such that if its deleted,
+// it get deleted from the follow list of other users
+// Number will need to be updated (DO we need API of WEBHOOK)
+
+//  ?? research for WEBHOOK
+
+userSchema.pre("remove", function cascadeDelete() {
+  return mongoose
+    .model("follows")
+    .remove({
+      $or: [{ followedUser: this.id }, { follower: this.id }],
+    })
+    .then(() => mongoose.model("stories").remove({ author: this.id }))
+    .then(() => mongoose.model("claps").remove({ user: this.id }));
+});
+
 userSchema.methods.getStories = function getStories() {
   return this.populate("stories")
     .execPopulate()
     .then((user) => user.stories);
-};
-
-userSchema.methods.getResponses = function getResponses() {
-  return mongoose.model("stories").find({
-    parent: { $ne: null },
-    author: this._id,
-  });
 };
 
 userSchema.methods.getClaps = function getClaps() {
@@ -37,7 +60,50 @@ userSchema.methods.getClaps = function getClaps() {
     .then((user) => user.claps);
 };
 
-//creating a user
+userSchema.methods.getFollowers = async function getFollowers() {
+  const followersList = await this.populate("followersList")
+    .execPopulate()
+    .then((user) => user.followersList);
+  return Promise.all(
+    followersList.map((follow) =>
+      follow
+        .populate("follower")
+        .execPopulate()
+        .then((follow) => follow.follower)
+    )
+  );
+};
+
+userSchema.methods.getFollowing = async function getFollowing() {
+  const followingList = await this.populate("followingList")
+    .execPopulate()
+    .then((user) => user.followingList);
+
+  return Promise.all(
+    followingList.map((follow) =>
+      follow
+        .populate("followedUser")
+        .execPopulate()
+        .then((follow) => follow.followedUser)
+    )
+  );
+};
+// ?? Think can we use virtual?
+userSchema.methods.getResponses = function getResponses() {
+  return mongoose.model("stories").find({
+    parent: { $ne: null },
+    author: this._id,
+  });
+};
+
+userSchema.methods.followUser = function followUser(followedUser) {
+  if (this.id === followedUser.id) return null;
+  return mongoose.model("follows").create({
+    followedUser,
+    follower: this,
+  });
+};
+
 const User = mongoose.model("users", userSchema);
 
 module.exports = User;

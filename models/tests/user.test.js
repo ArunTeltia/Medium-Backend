@@ -13,6 +13,9 @@ describe("User Model", () => {
   let story;
   let clap;
   let response;
+  //setting up the database
+
+  //copy paste from https://jestjs.io/docs/en/setup-teardown
   beforeAll(async () => {
     const { MONGO_URI } = process.env;
     mongoose.connect(`${MONGO_URI}`, { useNewUrlParser: true });
