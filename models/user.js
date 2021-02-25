@@ -1,9 +1,39 @@
+require("dotenv").config();
+const bcrypt = require("bcrypt");
 const mongoose = require("mongoose");
 
-const userSchema = new mongoose.Schema({
-  username: String,
-  avatar_url: String,
-});
+
+//should i use express-validator for this?
+const { usernameValidator } = require("./username-validator-middleware");
+
+const SALT_LENGTH = process.env.SALT_LENGTH;
+
+//if user dont get created it will through an error 
+const userSchema = new mongoose.Schema(
+  {
+    username: {
+      required: true,
+      type: String,
+      unique: true,
+      set: (val) => val.toLowerCase(),
+      validate: [
+        {
+          msg: usernameValidator.message,
+          validator: usernameValidator.validator,
+        },
+      ],
+    },
+    password: {
+      required: true,
+      type: String,
+      minlength: 6,
+    },
+    avatarURL: String,
+    followers: [{ type: mongoose.SchemaTypes.ObjectId, ref: "users" }],
+    following: [{ type: mongoose.SchemaTypes.ObjectId, ref: "users" }],
+  },
+  { timestamps: true }
+);
 
 userSchema.virtual("stories", {
   ref: "stories",

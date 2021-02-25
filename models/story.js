@@ -1,11 +1,22 @@
 const mongoose = require("mongoose");
 
-const storySchema = new mongoose.Schema({
-  title: String,
-  body: String,
-  author: { type: mongoose.SchemaTypes.ObjectId, ref: "users" },
-  parent: { type: mongoose.SchemaTypes.ObjectId, ref: "stories" },
-});
+const storySchema = new mongoose.Schema(
+  {
+    title: String,
+    body: String,
+    publishedAt: {
+      type: Date,
+      default: null,
+    },
+    published: {
+      type: Boolean,
+      default: false,
+    },
+    author: { type: mongoose.SchemaTypes.ObjectId, ref: "users" },
+    parent: { type: mongoose.SchemaTypes.ObjectId, ref: "stories" },
+  },
+  { timestamps: true }
+);
 
 storySchema.virtual("claps", {
   ref: "claps",
@@ -38,5 +49,5 @@ const Story = mongoose.model("stories", storySchema);
 module.exports = Story;
 
 //let story = await Story.create({title: "How to use Node like Pro",....})
-// extract claps from story directly by story.clapsCoint 
+// extract claps from story directly by story.clapsCoint
 // replies ---> story.replies
