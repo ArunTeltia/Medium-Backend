@@ -1,8 +1,12 @@
+require("dotenv").config();
 const express = require("express");
 const bodyParser = require("body-parser");
 const mongoose = require("mongoose");
 
 const models = require("./models");
+const { getDatabaseURI } = require("./utils");
+const { UserController } = require("./controllers");
+
 const app = express();
 
 app.use(
@@ -14,7 +18,14 @@ app.use(
   }
 );
 
-mongoose.connect(`${process.env.MONGO_URI}`, (err) => console.error(err));
+app.use(...appMiddleware);
+
+app.use("/users", UserController);
+
+mongoose.set("useCreateIndex", true);
+mongoose.connect(getDatabaseURI(), (err) =>
+  console.log(err || "connected to mongo")
+);
 
 const PORT = process.env.PORT || 5000;
 
