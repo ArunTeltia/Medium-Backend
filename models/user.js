@@ -58,6 +58,10 @@ userSchema.virtual("followingList", {
   foreignField: "follower",
 });
 
+userSchema.virtual("slug").get(function () {
+  return `@${this.username}`;
+});
+
 //whenever there is a wipe of user from the database, before wiping we have to remove his
 //stories and claps
 // ?? how to delete all the user that he is following fro thier follow list

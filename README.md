@@ -14,14 +14,18 @@ Todos
 - [ ] Pagination ? 
 
     -[x] story
+
     -[ ] followersList
+    
     -[ ] clapsList
+    
     -[ ] userList
 
 - [ ] Think about /me
 - [ ] error handling ?
 
     -[x] basic error handling
+
     -[ ] server down error handling
 
 - [x] Maybe Webhook or reference for deleting the user from the follow list of another user
@@ -36,6 +40,7 @@ Todos
 - [x] Authorisation using JWT or Passport ???
 
     -[x] JWT
+    
     -[ ] Passport !?
 
 - [ ] Cookie 

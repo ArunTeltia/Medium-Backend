@@ -1,18 +1,18 @@
 const f = require("faker");
-//populate fake data and out them as Mock and then send that data to index.js
-//that will be responsivle for getting all the values
 
-//create mock user 
 const userMock = () => ({
-  username: f.name.firstName(),
-  avatar_url: f.internet.avatar(),
+  username: f.name.firstName() + f.name.firstName(),
+  avatarURL: f.internet.avatar(),
+  password: f.internet.password(10),
 });
 
-const storyMock = ({ author, title, body, parent }) => ({
+const storyMock = ({ author, title, body, parent, published = false }) => ({
   author,
   title: title || f.company.catchPhrase(),
-  body: f.lorem.paragraphs(2),
+  body: body || f.lorem.paragraphs(2),
   parent: parent || null,
+  published,
+  publishedAt: published ? Date.now() : null,
 });
 
 const clapMock = ({ user, story, count }) => ({

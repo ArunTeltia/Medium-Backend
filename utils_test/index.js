@@ -1,7 +1,14 @@
-const { User } = require("../models");
+require("dotenv").config();
+
 const mocks = require("./mocks");
 
-const setup = async ({ userCount }) => {
+const dbConnect = (mongoose) => {
+  mongoose.set("useCreateIndex", true);
+  mongoose.set("useNewUrlParser", true);
+  mongoose.connect(process.env.MONGO_URI);
+};
+
+const setup = async (models, { userCount }) => {
   const output = {
     users: null,
   };
@@ -9,27 +16,27 @@ const setup = async ({ userCount }) => {
   output.users = await Promise.all(
     Array(userCount)
       .fill(null)
-      .map(() => User.create(mocks.userMock()))
+      .map(() => models.User.create(mocks.userMock()))
   );
 
   return output;
 };
 
-const destroyCollection = async (db, name) =>
+const destroyDocuments = async (db, collectionName) =>
   new Promise((res, rej) => {
-    db.collection(name, (error, collection) => {
+    db.collection(collectionName, (error, collection) => {
       if (error) return rej(error);
-      return collection.remove({}, (err) => {
+      return collection.deleteMany({}, (err) => {
         if (err) return rej(err);
         return res(true);
       });
     });
   });
 
-const dataPropogate = async (mongoose, collections) => {
+const teardown = async (mongoose, collections) => {
   const { db } = mongoose.connection;
   try {
-    await Promise.all(collections.map((name) => destroyCollection(db, name)));
+    await Promise.all(collections.map((name) => destroyDocuments(db, name)));
   } catch (error) {
     console.error(error);
   }
@@ -39,6 +46,7 @@ const dataPropogate = async (mongoose, collections) => {
 module.exports = {
   mocks,
   setup,
-  dataPropogate,
-  destroyCollection,
+  teardown,
+  destroyDocuments,
+  dbConnect,
 };

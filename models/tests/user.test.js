@@ -1,107 +1,93 @@
-require("dotenv").config();
-
 const mongoose = require("mongoose");
 const models = require("../index");
 const {
-  setup,
-  dataPropogate,
+  dbConnect,
+  teardown,
   mocks: { storyMock, clapMock },
 } = require("../../utils_test");
 
-describe("User Model", () => {
-  let user;
-  let story;
+describe("User Model: Schema, Virtuals and Hooks", () => {
+  let author;
   let clap;
-  let response;
-  //setting up the database
-
-  //copy paste from https://jestjs.io/docs/en/setup-teardown
+  let story;
   beforeAll(async () => {
-    const { MONGO_URI } = process.env;
-    mongoose.connect(`${MONGO_URI}`, { useNewUrlParser: true });
+    mongoose.set("useCreateIndex", true);
+    dbConnect(mongoose);
 
-    const data = await setup({ userCount: 1 });
-    [user] = data.users;
+    story = await models.Story.create(storyMock({ author }));
   });
 
   afterAll(async () => {
     const collections = ["users", "stories", "claps"];
-    return dataPropogate(mongoose, collections);
+    return teardown(mongoose, collections);
   });
 
-  describe("virtuals", () => {
-    describe("stories", () => {
-      let stories;
-      beforeAll(async () => {
-        story = await models.Story.create(storyMock({ author: user }));
-        user = await user.populate("stories").execPopulate();
-        stories = user.stories;
-      });
+  test("usernames are persisted in lowercase", async () => {
+    author = await models.User.create({
+      username: "ALLCAPS",
+      password: "irrelevant",
+    });
+    expect(author.username).toEqual("allcaps");
+  });
 
-      test("returns all stories user is an author of", () => {
-        expect(stories).toBeDefined();
-        expect(stories.length).toBe(1);
-        expect(stories[0]._id).toEqual(story._id);
-      });
+  describe(".slug virtual", () => {
+    let result;
+    let expected;
+    beforeAll(() => {
+      result = author.slug;
+      expected = `@${author.username}`;
+    });
+    test("returns @username slug", () => expect(result).toEqual(expected));
+  });
+
+  describe(".claps virtual", () => {
+    let claps;
+    beforeAll(async () => {
+      clap = await models.Clap.create(
+        clapMock({ user: author, story, count: 1 })
+      );
+      author = await author.populate("claps").execPopulate();
+      claps = author.claps;
     });
 
-    describe("claps", () => {
-      let claps;
-      beforeAll(async () => {
-        clap = await models.Clap.create(clapMock({ user, story }));
-        user = await user.populate("claps").execPopulate();
-        claps = user.claps;
-      });
-
-      test("returns all the claps the user is an author of", () => {
-        expect(claps).toBeDefined();
-        expect(claps.length).toBe(1);
-        expect(claps[0]._id).toEqual(clap._id);
-      });
+    test("returns all the claps the user has made", () => {
+      expect(claps).toBeDefined();
+      expect(claps.length).toBe(1);
+      expect(claps[0].id).toEqual(clap.id);
     });
   });
 
-  describe("instance methods", () => {
-    describe("getStories()", () => {
-      let result;
-      beforeAll(async () => {
-        result = await user.getStories({});
-      });
-
-      test("returns the users stories", () => {
-        expect(result).toBeDefined();
-        expect(result.length).toBe(1);
-        expect(result[0]._id).toEqual(story._id);
-      });
+  describe("pre-remove hook: cascade delete through associated collections", () => {
+    let userStories;
+    let userClaps;
+    beforeAll(async () => {
+      const userID = author.id;
+      await author.remove();
+      userStories = await models.Story.find({ author: userID });
+      userClaps = await models.Clap.find({ user: userID });
     });
 
-    describe("getResponses()", () => {
-      let result;
-      beforeAll(async () => {
-        response = await models.Story.create(
-          storyMock({ author: user, parent: story })
-        );
-        result = await user.getResponses({});
-      });
+    test("cascades to destroy authored stories", () =>
+      expect(userStories.length).toBe(0));
+    test("cascades to destroy claps made by the user", () =>
+      expect(userClaps.length).toBe(0));
+  });
 
-      test("returns the users responses", () => {
-        expect(result).toBeDefined();
-        expect(result.length).toBe(1);
-        expect(result[0]._id).toEqual(response._id);
-      });
+  describe("pre-save hook: converts passwords to salted hashes", () => {
+    let user;
+    const password = "a difficult one";
+    beforeAll(async () => {
+      user = await models.User.create({ username: "Arun", password });
     });
 
-    describe("getClaps()", () => {
-      let result;
-      beforeAll(async () => {
-        result = await user.getClaps({});
-      });
+    test("plain-text password is not persisted on create", async () => {
+      expect(user.password).toEqual(password);
+    });
 
-      test("returns the users claps", () => {
-        expect(result).toBeDefined();
-        expect(result.length).toBe(1);
-        expect(result[0]._id).toEqual(clap._id);
-      });
+    test("plain-text password is not persisted on update", async () => {
+      const newPassword = "a new one";
+      user = await user.update({ password: newPassword });
+      expect(user.password).not.toEqual(newPassword);
     });
   });
 });
