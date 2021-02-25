@@ -4,6 +4,9 @@ Medium Backend Node,Express, MongoDB API
 - [x] Server connection
 - [ ] API creation for all Schema ( ongoing )
 - [ ] Set a max claps 50 for each story by one user 
+- [ ] Pagination ? 
+- [ ] Think about /me
+- [ ] error handling ?
 - [ ] Maybe Webhook or reference for deleting the user from the follow list of another user
 - [ ] Write Tests for each model 
 - [ ] Delete checkAPI and create a check for API
