@@ -2,13 +2,12 @@ require("dotenv").config();
 const bcrypt = require("bcrypt");
 const mongoose = require("mongoose");
 
-
 //should i use express-validator for this?
 const { usernameValidator } = require("./username-validator-middleware");
 
 const SALT_LENGTH = process.env.SALT_LENGTH;
 
-//if user dont get created it will through an error 
+//if user dont get created it will through an error
 const userSchema = new mongoose.Schema(
   {
     username: {
@@ -78,10 +77,30 @@ userSchema.pre("remove", function cascadeDelete() {
     .then(() => mongoose.model("claps").remove({ user: this.id }));
 });
 
-userSchema.methods.getStories = function getStories() {
-  return this.populate("stories")
-    .execPopulate()
-    .then((user) => user.stories);
+userSchema.methods.getStories = function getStories({
+  limit = 10,
+  currentPage = 0,
+  published = true,
+  onlyStories = false,
+  onlyResponses = false,
+  sortBy = {},
+}) {
+  const match = { author: this, published };
+  if (onlyStories) match.parent = null;
+  else if (onlyResponses) match.parent = { $ne: null };
+
+  const sortByEmpty = Object.keys(sortBy).length === 0;
+  if (published && sortByEmpty) sortBy.publishedAt = -1;
+  else if (!published && sortByEmpty) sortBy.updatedAt = -1;
+
+  const limitBy = Math.min(limit, 20);
+  const skipBy = currentPage * limitBy;
+
+  return this.model("stories")
+    .find(match)
+    .sort(sortBy)
+    .limit(limitBy)
+    .skip(skipBy);
 };
 
 userSchema.methods.getClaps = function getClaps() {
