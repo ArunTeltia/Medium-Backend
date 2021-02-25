@@ -4,8 +4,7 @@ const bodyParser = require("body-parser");
 const mongoose = require("mongoose");
 
 const models = require("./models");
-const { getDatabaseURI } = require("./utils");
-const { UserController } = require("./controllers");
+const { UsersController, TokensController } = require("./controllers");
 
 const app = express();
 
@@ -18,12 +17,14 @@ app.use(
   }
 );
 
-app.use(...appMiddleware);
-
-app.use("/users", UserController);
+app.use("/users", UsersController);
+app.use("/tokens", TokensController);
 
 mongoose.set("useCreateIndex", true);
-mongoose.connect(getDatabaseURI(), (err) =>
+mongoose.set("useNewUrlParser", true);
+mongoose.set("useUnifiedTopology", true);
+
+mongoose.connect(process.env.MONGO_URI, (err) =>
   console.log(err || "connected to mongo")
 );
 

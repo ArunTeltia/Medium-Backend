@@ -4,7 +4,7 @@ const mongoose = require("mongoose");
 const models = require("../index");
 const {
   setup,
-  teardown,
+  dataPropogate,
   mocks: { storyMock, clapMock },
 } = require("../../utils_test");
 
@@ -26,7 +26,7 @@ describe("User Model", () => {
 
   afterAll(async () => {
     const collections = ["users", "stories", "claps"];
-    return teardown(mongoose, collections);
+    return dataPropogate(mongoose, collections);
   });
 
   describe("virtuals", () => {

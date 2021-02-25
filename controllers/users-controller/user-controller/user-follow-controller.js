@@ -1,6 +1,5 @@
 const express = require("express");
-
-const { requireAuthedUser } = require("../../shared-middleware");
+const { requireAuthedUser } = require("../../../shared-middleware");
 
 const UserFollowersController = express.Router();
 

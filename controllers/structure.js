@@ -12,10 +12,6 @@ const endpointMap = {
 
   story: {},
 
-  topics: {
-    root: {},
-  },
-
   auth: {
     register: {
       method: "POST",

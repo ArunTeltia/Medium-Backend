@@ -26,7 +26,7 @@ const destroyCollection = async (db, name) =>
     });
   });
 
-const teardown = async (mongoose, collections) => {
+const dataPropogate = async (mongoose, collections) => {
   const { db } = mongoose.connection;
   try {
     await Promise.all(collections.map((name) => destroyCollection(db, name)));
@@ -39,6 +39,6 @@ const teardown = async (mongoose, collections) => {
 module.exports = {
   mocks,
   setup,
-  teardown,
+  dataPropogate,
   destroyCollection,
 };
